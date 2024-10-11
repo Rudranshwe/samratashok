@@ -16,74 +16,66 @@ class Paper {
   currentPaperX = 0;
   currentPaperY = 0;
   rotating = false;
-  initialDistance = 0;
-  initialAngle = 0;
 
   init(paper) {
     paper.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      
-      if (e.touches.length === 2) {
-        this.rotating = true;
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
+      if(!this.rotating) {
+        this.touchMoveX = e.touches[0].clientX;
+        this.touchMoveY = e.touches[0].clientY;
+        
+        this.velX = this.touchMoveX - this.prevTouchX;
+        this.velY = this.touchMoveY - this.prevTouchY;
+      }
+        
+      const dirX = e.touches[0].clientX - this.touchStartX;
+      const dirY = e.touches[0].clientY - this.touchStartY;
+      const dirLength = Math.sqrt(dirX*dirX+dirY*dirY);
+      const dirNormalizedX = dirX / dirLength;
+      const dirNormalizedY = dirY / dirLength;
 
-        const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-        const currentAngle = Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * 180 / Math.PI;
+      const angle = Math.atan2(dirNormalizedY, dirNormalizedX);
+      let degrees = 180 * angle / Math.PI;
+      degrees = (360 + Math.round(degrees)) % 360;
+      if(this.rotating) {
+        this.rotation = degrees;
+      }
 
-        if (this.initialDistance === 0) {
-          this.initialDistance = currentDistance;
-          this.initialAngle = currentAngle;
+      if(this.holdingPaper) {
+        if(!this.rotating) {
+          this.currentPaperX += this.velX;
+          this.currentPaperY += this.velY;
         }
-
-        // Calculate rotation
-        const angleChange = currentAngle - this.initialAngle;
-        this.rotation += angleChange;
+        this.prevTouchX = this.touchMoveX;
+        this.prevTouchY = this.touchMoveY;
 
         paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
-
-        // Update initial values for the next move event
-        this.initialAngle = currentAngle;
-      } else {
-        if (!this.rotating) {
-          this.touchMoveX = e.touches[0].clientX;
-          this.touchMoveY = e.touches[0].clientY;
-
-          this.velX = this.touchMoveX - this.prevTouchX;
-          this.velY = this.touchMoveY - this.prevTouchY;
-
-          if (this.holdingPaper) {
-            this.currentPaperX += this.velX;
-            this.currentPaperY += this.velY;
-
-            this.prevTouchX = this.touchMoveX;
-            this.prevTouchY = this.touchMoveY;
-
-            paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
-          }
-        }
       }
-    });
+    })
 
     paper.addEventListener('touchstart', (e) => {
-      if (this.holdingPaper) return;
-
+      if(this.holdingPaper) return; 
       this.holdingPaper = true;
+      
       paper.style.zIndex = highestZ;
       highestZ += 1;
-
+      
       this.touchStartX = e.touches[0].clientX;
       this.touchStartY = e.touches[0].clientY;
       this.prevTouchX = this.touchStartX;
       this.prevTouchY = this.touchStartY;
-
-      // Reset for rotation
-      this.initialDistance = 0;
-      this.initialAngle = 0;
     });
-
     paper.addEventListener('touchend', () => {
       this.holdingPaper = false;
+      this.rotating = false;
+    });
+
+    // For two-finger rotation on touch screens
+    paper.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+      this.rotating = true;
+    });
+    paper.addEventListener('gestureend', () => {
       this.rotating = false;
     });
   }
