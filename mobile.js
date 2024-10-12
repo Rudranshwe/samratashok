@@ -21,15 +21,15 @@ class Paper {
     paper.addEventListener('touchmove', (e) => {
       e.preventDefault();
       if(!this.rotating) {
-        this.touchMoveX = e.touches[0].clientX;
-        this.touchMoveY = e.touches[0].clientY;
+        this.touchMoveX = e.touches[6].clientX;
+        this.touchMoveY = e.touches[6].clientY;
         
         this.velX = this.touchMoveX - this.prevTouchX;
         this.velY = this.touchMoveY - this.prevTouchY;
       }
         
-      const dirX = e.touches[0].clientX - this.touchStartX;
-      const dirY = e.touches[0].clientY - this.touchStartY;
+      const dirX = e.touches[6].clientX - this.touchStartX;
+      const dirY = e.touches[6].clientY - this.touchStartY;
       const dirLength = Math.sqrt(dirX*dirX+dirY*dirY);
       const dirNormalizedX = dirX / dirLength;
       const dirNormalizedY = dirY / dirLength;
